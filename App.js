@@ -529,7 +529,12 @@ const ThunderstormAnimation = () => {
 
   // Lightning effect
   useEffect(() => {
+    let isMounted = true;
+    let timeoutId;
+
     const triggerLightning = () => {
+      if (!isMounted) return; // Stop if component is unmounted
+
       const newId = lightningIdRef.current++;
       setLightning(prev => [...prev, newId]);
 
@@ -539,12 +544,17 @@ const ThunderstormAnimation = () => {
 
       // Schedule next lightning (random interval 2-6 seconds)
       const nextStrike = 2000 + Math.random() * 4000;
-      setTimeout(triggerLightning, nextStrike);
+      timeoutId = setTimeout(triggerLightning, nextStrike);
     };
 
     // Start first lightning after 1 second
-    const timeout = setTimeout(triggerLightning, 1000);
-    return () => clearTimeout(timeout);
+    timeoutId = setTimeout(triggerLightning, 1000);
+
+    // Cleanup function
+    return () => {
+      isMounted = false;
+      if (timeoutId) clearTimeout(timeoutId);
+    };
   }, []);
 
   const removeLightning = (id) => {
@@ -807,7 +817,11 @@ const Cloud = ({ delay, startY, size, speed }) => {
   const opacity = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
+    let isMounted = true;
+
     const animate = () => {
+      if (!isMounted) return;
+
       translateX.setValue(-200);
       opacity.setValue(0);
 
@@ -835,9 +849,15 @@ const Cloud = ({ delay, startY, size, speed }) => {
             useNativeDriver: true
           }),
         ]),
-      ]).start(() => animate());
+      ]).start(() => {
+        if (isMounted) animate();
+      });
     };
     animate();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   return (
@@ -899,7 +919,7 @@ const SunnyAnimation = () => {
   const glowScale = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
-    Animated.loop(
+    const animation = Animated.loop(
       Animated.parallel([
         // Pulse opacity
         Animated.sequence([
@@ -932,7 +952,13 @@ const SunnyAnimation = () => {
           }),
         ]),
       ])
-    ).start();
+    );
+
+    animation.start();
+
+    return () => {
+      animation.stop();
+    };
   }, []);
 
   return (
@@ -961,7 +987,7 @@ const Star = ({ x, y, size, delay }) => {
   const opacity = useRef(new Animated.Value(0.1)).current;
 
   useEffect(() => {
-    Animated.loop(
+    const animation = Animated.loop(
       Animated.sequence([
         Animated.timing(opacity, {
           toValue: 0.9,
@@ -975,7 +1001,13 @@ const Star = ({ x, y, size, delay }) => {
           useNativeDriver: true
         }),
       ])
-    ).start();
+    );
+
+    animation.start();
+
+    return () => {
+      animation.stop();
+    };
   }, []);
 
   return (
@@ -1003,7 +1035,7 @@ const NightAnimation = () => {
   const moonGlow = useRef(new Animated.Value(0.2)).current;
 
   useEffect(() => {
-    Animated.loop(
+    const animation = Animated.loop(
       Animated.sequence([
         Animated.timing(moonGlow, {
           toValue: 0.5,
@@ -1018,7 +1050,13 @@ const NightAnimation = () => {
           useNativeDriver: true
         }),
       ])
-    ).start();
+    );
+
+    animation.start();
+
+    return () => {
+      animation.stop();
+    };
   }, []);
 
   const stars = useMemo(() =>
@@ -2502,16 +2540,16 @@ const styles = StyleSheet.create({
   // Sun Glow
   sunGlow: {
     position: 'absolute',
-    top: -120,
-    left: -120,
-    width: 400,
-    height: 400,
-    borderRadius: 200,
+    top: -75,
+    left: -75,
+    width: 250,
+    height: 250,
+    borderRadius: 125,
     backgroundColor: '#FFE082',
     shadowColor: '#FFD54F',
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.8,
-    shadowRadius: 100,
+    shadowRadius: 80,
   },
 
   // Star
