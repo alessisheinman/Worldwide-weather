@@ -14,10 +14,6 @@ A React Native weather application built with Expo featuring animated weather ef
 ## Prerequisites
 
 - [Node.js](https://nodejs.org/) (v16 or higher)
-- [Expo CLI](https://docs.expo.dev/get-started/installation/)
-  ```bash
-  npm install -g expo-cli
-  ```
 
 ## Installation
 
